@@ -1,0 +1,283 @@
+{
+  "overall": {
+    "exact_match_accuracy": 0.7104629381857105,
+    "hamming_loss": 0.05052180893765052,
+    "subset_accuracy": 0.7104629381857105,
+    "macro_precision": 0.7934360578891209,
+    "macro_recall": 0.7315616079725927,
+    "macro_f1": 0.7543790055956977,
+    "micro_precision": 0.7783382001592779,
+    "micro_recall": 0.7357590966122961,
+    "micro_f1": 0.7564499484004128,
+    "macro_auc": 0.9395408857769454,
+    "auc_scores": [
+      0.953012659227327,
+      0.9720517824181201,
+      0.9564568783834043,
+      0.9657883878322793,
+      0.9503095638639979,
+      0.9724386628614411,
+      0.9748827066014426,
+      0.8622271655875493,
+      0.8730727411159198,
+      0.915168309877971
+    ]
+  },
+  "per_label": {
+    "여성/가족": {
+      "precision": 0.7740259740259741,
+      "recall": 0.7563451776649747,
+      "f1": 0.7650834403080873,
+      "support": 394,
+      "accuracy": 0.951030238158951,
+      "positive_count": 394,
+      "predicted_count": 385,
+      "true_positive": 298,
+      "false_positive": 87,
+      "false_negative": 96,
+      "true_negative": 3256,
+      "specificity": 0.9739754711337122,
+      "auc": 0.953012659227327
+    },
+    "남성": {
+      "precision": 0.8470948012232415,
+      "recall": 0.8293413173652695,
+      "f1": 0.8381240544629349,
+      "support": 334,
+      "accuracy": 0.9713674070109714,
+      "positive_count": 334,
+      "predicted_count": 327,
+      "true_positive": 277,
+      "false_positive": 50,
+      "false_negative": 57,
+      "true_negative": 3353,
+      "specificity": 0.9853070819864825,
+      "auc": 0.9720517824181201
+    },
+    "성소수자": {
+      "precision": 0.8191126279863481,
+      "recall": 0.8571428571428571,
+      "f1": 0.837696335078534,
+      "support": 280,
+      "accuracy": 0.9751137275889751,
+      "positive_count": 280,
+      "predicted_count": 293,
+      "true_positive": 240,
+      "false_positive": 53,
+      "false_negative": 40,
+      "true_negative": 3404,
+      "specificity": 0.9846687879664449,
+      "auc": 0.9564568783834043
+    },
+    "인종/국적": {
+      "precision": 0.8333333333333334,
+      "recall": 0.7511737089201878,
+      "f1": 0.7901234567901235,
+      "support": 426,
+      "accuracy": 0.9545089644099545,
+      "positive_count": 426,
+      "predicted_count": 384,
+      "true_positive": 320,
+      "false_positive": 64,
+      "false_negative": 106,
+      "true_negative": 3247,
+      "specificity": 0.9806704922983993,
+      "auc": 0.9657883878322793
+    },
+    "연령": {
+      "precision": 0.8484848484848485,
+      "recall": 0.7671232876712328,
+      "f1": 0.8057553956834531,
+      "support": 146,
+      "accuracy": 0.9855499063419856,
+      "positive_count": 146,
+      "predicted_count": 132,
+      "true_positive": 112,
+      "false_positive": 20,
+      "false_negative": 34,
+      "true_negative": 3571,
+      "specificity": 0.9944305207463102,
+      "auc": 0.9503095638639979
+    },
+    "지역": {
+      "precision": 0.872,
+      "recall": 0.8384615384615385,
+      "f1": 0.8549019607843137,
+      "support": 260,
+      "accuracy": 0.9801980198019802,
+      "positive_count": 260,
+      "predicted_count": 250,
+      "true_positive": 218,
+      "false_positive": 32,
+      "false_negative": 42,
+      "true_negative": 3445,
+      "specificity": 0.9907966637906241,
+      "auc": 0.9724386628614411
+    },
+    "종교": {
+      "precision": 0.8614864864864865,
+      "recall": 0.8793103448275862,
+      "f1": 0.870307167235495,
+      "support": 290,
+      "accuracy": 0.9796628311479797,
+      "positive_count": 290,
+      "predicted_count": 296,
+      "true_positive": 255,
+      "false_positive": 41,
+      "false_negative": 35,
+      "true_negative": 3406,
+      "specificity": 0.9881055990716565,
+      "auc": 0.9748827066014426
+    },
+    "기타 혐오": {
+      "precision": 0.6551724137931034,
+      "recall": 0.2835820895522388,
+      "f1": 0.39583333333333337,
+      "support": 134,
+      "accuracy": 0.968959058067969,
+      "positive_count": 134,
+      "predicted_count": 58,
+      "true_positive": 38,
+      "false_positive": 20,
+      "false_negative": 96,
+      "true_negative": 3583,
+      "specificity": 0.9944490702192618,
+      "auc": 0.8622271655875493
+    },
+    "악플/욕설": {
+      "precision": 0.6910919540229885,
+      "recall": 0.6119592875318066,
+      "f1": 0.6491228070175439,
+      "support": 786,
+      "accuracy": 0.8608509499598609,
+      "positive_count": 786,
+      "predicted_count": 696,
+      "true_positive": 481,
+      "false_positive": 215,
+      "false_negative": 305,
+      "true_negative": 2736,
+      "specificity": 0.9271433412402575,
+      "auc": 0.8730727411159198
+    },
+    "clean": {
+      "precision": 0.7325581395348837,
+      "recall": 0.7411764705882353,
+      "f1": 0.736842105263158,
+      "support": 935,
+      "accuracy": 0.8675408081348676,
+      "positive_count": 935,
+      "predicted_count": 946,
+      "true_positive": 693,
+      "false_positive": 253,
+      "false_negative": 242,
+      "true_negative": 2549,
+      "specificity": 0.9097073518915061,
+      "auc": 0.915168309877971
+    }
+  },
+  "confusion_matrices": [
+    [
+      [
+        3256,
+        87
+      ],
+      [
+        96,
+        298
+      ]
+    ],
+    [
+      [
+        3353,
+        50
+      ],
+      [
+        57,
+        277
+      ]
+    ],
+    [
+      [
+        3404,
+        53
+      ],
+      [
+        40,
+        240
+      ]
+    ],
+    [
+      [
+        3247,
+        64
+      ],
+      [
+        106,
+        320
+      ]
+    ],
+    [
+      [
+        3571,
+        20
+      ],
+      [
+        34,
+        112
+      ]
+    ],
+    [
+      [
+        3445,
+        32
+      ],
+      [
+        42,
+        218
+      ]
+    ],
+    [
+      [
+        3406,
+        41
+      ],
+      [
+        35,
+        255
+      ]
+    ],
+    [
+      [
+        3583,
+        20
+      ],
+      [
+        96,
+        38
+      ]
+    ],
+    [
+      [
+        2736,
+        215
+      ],
+      [
+        305,
+        481
+      ]
+    ],
+    [
+      [
+        2549,
+        253
+      ],
+      [
+        242,
+        693
+      ]
+    ]
+  ],
+  "eval_loss": 0.1555348043842988,
+  "training_time_seconds": 2174.478115797043,
+  "training_time_formatted": "0h 36m 14s"
+}

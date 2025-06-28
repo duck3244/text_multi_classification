@@ -1,0 +1,149 @@
+{
+  "train": {
+    "total_samples": 15005,
+    "label_distribution": {
+      "여성/가족": {
+        "count": 1599,
+        "percentage": 10.656447850716427
+      },
+      "남성": {
+        "count": 1347,
+        "percentage": 8.977007664111962
+      },
+      "성소수자": {
+        "count": 1141,
+        "percentage": 7.604131956014662
+      },
+      "인종/국적": {
+        "count": 1728,
+        "percentage": 11.516161279573476
+      },
+      "연령": {
+        "count": 603,
+        "percentage": 4.018660446517827
+      },
+      "지역": {
+        "count": 1052,
+        "percentage": 7.0109963345551485
+      },
+      "종교": {
+        "count": 1181,
+        "percentage": 7.870709763412195
+      },
+      "기타 혐오": {
+        "count": 569,
+        "percentage": 3.7920693102299237
+      },
+      "악플/욕설": {
+        "count": 3143,
+        "percentage": 20.946351216261245
+      },
+      "clean": {
+        "count": 3739,
+        "percentage": 24.918360546484504
+      }
+    },
+    "avg_labels_per_sample": 1.0731089636787738,
+    "max_labels_per_sample": 6,
+    "samples_with_no_labels": 2,
+    "samples_with_multiple_labels": 994
+  },
+  "valid": {
+    "total_samples": 3737,
+    "label_distribution": {
+      "여성/가족": {
+        "count": 394,
+        "percentage": 10.543216483810543
+      },
+      "남성": {
+        "count": 334,
+        "percentage": 8.937650521808937
+      },
+      "성소수자": {
+        "count": 280,
+        "percentage": 7.492641156007493
+      },
+      "인종/국적": {
+        "count": 426,
+        "percentage": 11.3995183302114
+      },
+      "연령": {
+        "count": 146,
+        "percentage": 3.906877174203907
+      },
+      "지역": {
+        "count": 260,
+        "percentage": 6.957452502006957
+      },
+      "종교": {
+        "count": 290,
+        "percentage": 7.76023548300776
+      },
+      "기타 혐오": {
+        "count": 134,
+        "percentage": 3.585763981803586
+      },
+      "악플/욕설": {
+        "count": 786,
+        "percentage": 21.032914102221035
+      },
+      "clean": {
+        "count": 935,
+        "percentage": 25.02006957452502
+      }
+    },
+    "avg_labels_per_sample": 1.0663633930960663,
+    "max_labels_per_sample": 3,
+    "samples_with_no_labels": 0,
+    "samples_with_multiple_labels": 234
+  },
+  "all": {
+    "total_samples": 18742,
+    "label_distribution": {
+      "여성/가족": {
+        "count": 1993,
+        "percentage": 10.633870451392594
+      },
+      "남성": {
+        "count": 1681,
+        "percentage": 8.969160175008003
+      },
+      "성소수자": {
+        "count": 1421,
+        "percentage": 7.581901611354177
+      },
+      "인종/국적": {
+        "count": 2154,
+        "percentage": 11.492903638885926
+      },
+      "연령": {
+        "count": 749,
+        "percentage": 3.9963717852950595
+      },
+      "지역": {
+        "count": 1312,
+        "percentage": 7.000320136591612
+      },
+      "종교": {
+        "count": 1471,
+        "percentage": 7.84868210436453
+      },
+      "기타 혐오": {
+        "count": 703,
+        "percentage": 3.7509337317255365
+      },
+      "악플/욕설": {
+        "count": 3929,
+        "percentage": 20.96361114075339
+      },
+      "clean": {
+        "count": 4674,
+        "percentage": 24.938640486607618
+      }
+    },
+    "avg_labels_per_sample": 1.0717639526197844,
+    "max_labels_per_sample": 6,
+    "samples_with_no_labels": 2,
+    "samples_with_multiple_labels": 1228
+  }
+}

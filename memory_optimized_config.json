@@ -1,0 +1,10 @@
+{
+  "training": {
+    "batch_size": 4,
+    "gradient_accumulation_steps": 4,
+    "fp16": true
+  },
+  "model": {
+    "max_length": 256
+  }
+}
