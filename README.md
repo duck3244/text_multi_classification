@@ -43,10 +43,6 @@
 ### 1️⃣ 환경 설정
 
 ```bash
-# 저장소 클론
-git clone <repository-url>
-cd korean-unsmile-classification
-
 # 가상환경 생성 (권장)
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
@@ -62,8 +58,6 @@ pip install -r requirements.txt
 # 전체 파이프라인 실행 (데이터 처리 → 훈련 → 평가)
 python main.py pipeline
 ```
-
-**🎉 끝! 이제 커피 한 잔 마시고 기다리세요!**
 
 ---
 
