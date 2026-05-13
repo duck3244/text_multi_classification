@@ -8,7 +8,14 @@ import os
 import sys
 import argparse
 
+from pathlib import Path
 from typing import Optional
+
+# backend/ 디렉토리를 sys.path에 추가 — 다른 cwd에서 `python backend/main.py`로 실행해도
+# 형제 모듈(config, model, trainer 등)을 import 할 수 있게 함.
+_BACKEND_DIR = str(Path(__file__).resolve().parent)
+if _BACKEND_DIR not in sys.path:
+    sys.path.insert(0, _BACKEND_DIR)
 
 
 def setup_project():
@@ -250,54 +257,58 @@ def add_common_args(parser):
 
 
 def add_training_args(parser):
-    """훈련 관련 인자 추가"""
+    """훈련 관련 인자 추가
+
+    참고: --preset 값을 살리려면 default=None으로 두고 사용자가 지정한 값만
+    config_from_args에서 override한다. 실제 기본값은 ConfigManager 프리셋에 있음.
+    """
 
     # 모델 관련
     model_group = parser.add_argument_group('Model Arguments')
-    model_group.add_argument('--model_name', type=str,
-                             default='monologg/koelectra-base-v3-discriminator',
+    model_group.add_argument('--model_name', type=str, default=None,
                              help='사전 훈련된 모델명')
-    model_group.add_argument('--max_length', type=int, default=512,
+    model_group.add_argument('--max_length', type=int, default=None,
                              help='최대 시퀀스 길이')
-    model_group.add_argument('--dropout_rate', type=float, default=0.1,
+    model_group.add_argument('--dropout_rate', type=float, default=None,
                              help='드롭아웃 비율')
 
     # 훈련 관련
     training_group = parser.add_argument_group('Training Arguments')
-    training_group.add_argument('--batch_size', type=int, default=16,
+    training_group.add_argument('--batch_size', type=int, default=None,
                                 help='배치 크기')
-    training_group.add_argument('--learning_rate', type=float, default=2e-5,
+    training_group.add_argument('--learning_rate', type=float, default=None,
                                 help='학습률')
-    training_group.add_argument('--num_epochs', type=int, default=5,
+    training_group.add_argument('--num_epochs', type=int, default=None,
                                 help='훈련 에포크 수')
-    training_group.add_argument('--weight_decay', type=float, default=0.01,
+    training_group.add_argument('--weight_decay', type=float, default=None,
                                 help='가중치 감쇠')
-    training_group.add_argument('--warmup_ratio', type=float, default=0.1,
+    training_group.add_argument('--warmup_ratio', type=float, default=None,
                                 help='웜업 비율')
-    training_group.add_argument('--eval_steps', type=int, default=500,
+    training_group.add_argument('--eval_steps', type=int, default=None,
                                 help='평가 주기 (스텝)')
-    training_group.add_argument('--save_steps', type=int, default=1000,
+    training_group.add_argument('--save_steps', type=int, default=None,
                                 help='저장 주기 (스텝)')
-    training_group.add_argument('--early_stopping_patience', type=int, default=3,
+    training_group.add_argument('--early_stopping_patience', type=int, default=None,
                                 help='조기 종료 patience')
+    training_group.add_argument('--gradient_accumulation_steps', type=int, default=None,
+                                help='그래디언트 누적 스텝 수 (effective batch = batch_size * 이 값)')
 
     # 데이터 관련
     data_group = parser.add_argument_group('Data Arguments')
-    data_group.add_argument('--data_dir', type=str, default='korean_unsmile_csv',
+    data_group.add_argument('--data_dir', type=str, default=None,
                             help='데이터 디렉토리')
-    data_group.add_argument('--max_samples', type=int,
+    data_group.add_argument('--max_samples', type=int, default=None,
                             help='최대 샘플 수 (디버깅용)')
 
     # 로깅 관련
     logging_group = parser.add_argument_group('Logging Arguments')
-    logging_group.add_argument('--output_dir', type=str, default='output',
+    logging_group.add_argument('--output_dir', type=str, default=None,
                                help='출력 디렉토리')
-    logging_group.add_argument('--run_name', type=str,
+    logging_group.add_argument('--run_name', type=str, default=None,
                                help='실행 이름')
     logging_group.add_argument('--use_wandb', action='store_true',
                                help='WandB 사용')
-    logging_group.add_argument('--wandb_project', type=str,
-                               default='korean-unsmile-classification',
+    logging_group.add_argument('--wandb_project', type=str, default=None,
                                help='WandB 프로젝트명')
 
     # 프리셋
@@ -398,6 +409,14 @@ def main():
     # 명령행 인자 파싱
     parser = create_parser()
     args = parser.parse_args()
+
+    # 상대 경로 인자를 backend 디렉토리 기준 절대 경로로 정규화 (어떤 cwd에서도 동작하게)
+    from config import resolve_path
+    for _attr in ('data_output_dir', 'data_dir', 'eval_data', 'eval_output_dir',
+                  'model_path', 'config', 'output_dir', 'output_file'):
+        _val = getattr(args, _attr, None)
+        if isinstance(_val, str) and _val:
+            setattr(args, _attr, resolve_path(_val))
 
     # 명령어 없이 실행된 경우
     if not args.command:

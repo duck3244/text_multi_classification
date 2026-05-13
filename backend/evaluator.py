@@ -19,7 +19,7 @@ from typing import Dict, List, Tuple, Optional, Any
 
 # 로컬 모듈 임포트
 from model import MultiLabelElectraClassifier, KoreanUnsmileDataset
-from utils import MetricsCalculator, VisualizationUtils, setup_logging, save_json
+from utils import MetricsCalculator, VisualizationUtils, setup_logging, save_json, to_en_labels
 from config import ExperimentConfig
 
 
@@ -487,6 +487,7 @@ class ModelEvaluator:
             },
             'overall_metrics': metrics['overall'],
             'per_label_metrics': metrics['per_label'],
+            'confusion_matrices': metrics['confusion_matrices'],
             'threshold_analysis': threshold_analysis,
             'distribution_analysis': distribution_analysis,
             'difficult_samples': difficult_samples
@@ -612,7 +613,7 @@ class ModelEvaluator:
         fig, axes = plt.subplots(1, 2, figsize=(15, 6))
 
         # 레이블별 예측 빈도
-        labels = list(distribution_analysis['label_prediction_counts'].keys())
+        labels = to_en_labels(distribution_analysis['label_prediction_counts'].keys())
         counts = list(distribution_analysis['label_prediction_counts'].values())
 
         bars = axes[0].bar(range(len(labels)), counts)
@@ -627,9 +628,9 @@ class ModelEvaluator:
             axes[0].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01 * max(counts),
                         str(count), ha='center', va='bottom', fontsize=9)
 
-        # 상위 레이블 조합
+        # 상위 레이블 조합 (조합 안의 라벨도 영문화)
         top_combinations = distribution_analysis['top_label_combinations'][:5]
-        combination_labels = [', '.join(combo['labels']) for combo in top_combinations]
+        combination_labels = [', '.join(to_en_labels(combo['labels'])) for combo in top_combinations]
         combination_counts = [combo['count'] for combo in top_combinations]
 
         bars = axes[1].bar(range(len(combination_labels)), combination_counts)
@@ -646,7 +647,8 @@ class ModelEvaluator:
     def plot_probability_distributions(self, predictions: np.ndarray, output_dir: str):
         """확률 분포 히스토그램"""
 
-        n_labels = len(self.label_columns)
+        en_labels = to_en_labels(self.label_columns)
+        n_labels = len(en_labels)
         n_cols = 4
         n_rows = (n_labels + n_cols - 1) // n_cols
 
@@ -657,7 +659,7 @@ class ModelEvaluator:
             axes = [axes]
         axes = np.array(axes).flatten()
 
-        for i, label in enumerate(self.label_columns):
+        for i, label in enumerate(en_labels):
             axes[i].hist(predictions[:, i], bins=50, alpha=0.7, edgecolor='black')
             axes[i].set_title(f'{label}')
             axes[i].set_xlabel('Probability')

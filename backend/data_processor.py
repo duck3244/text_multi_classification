@@ -12,12 +12,16 @@ import pandas as pd
 from datasets import load_dataset
 from typing import Dict, List, Tuple, Optional
 
+from config import resolve_path
+
+_DEFAULT_DATA_DIR = resolve_path('korean_unsmile_csv')
+
 
 class KoreanUnsmileProcessor:
     """Korean UnSmile 데이터셋 처리 클래스"""
     
-    def __init__(self, output_dir: str = 'korean_unsmile_csv'):
-        self.output_dir = output_dir
+    def __init__(self, output_dir: str = _DEFAULT_DATA_DIR):
+        self.output_dir = resolve_path(output_dir)
         self.label_columns = [
             '여성/가족', '남성', '성소수자', '인종/국적', '연령',
             '지역', '종교', '기타 혐오', '악플/욕설', 'clean'

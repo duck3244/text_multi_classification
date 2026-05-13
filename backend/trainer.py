@@ -21,7 +21,7 @@ from transformers import (
 )
 
 # 로컬 모듈 임포트
-from model import MultiLabelElectraClassifier, KoreanUnsmileDataset, create_model
+from model import MultiLabelElectraClassifier, KoreanUnsmileDataset, create_model, FocalLoss
 from config import ExperimentConfig
 from utils import (
     MetricsCalculator, EarlyStopping, TrainingHistory, VisualizationUtils,
@@ -209,17 +209,28 @@ class KoreanUnsmileTrainer:
         else:
             self.class_weights = None
 
+        # 손실 함수 빌드 (config.model.loss_type 반영)
+        self.criterion = self._build_criterion()
+        self.logger.info(f"손실 함수: {self.config.model.loss_type}")
+
         return model, optimizer, scheduler
+
+    def _build_criterion(self) -> nn.Module:
+        """config.model.loss_type에 따른 손실 함수 생성"""
+        loss_type = self.config.model.loss_type
+
+        if loss_type == "focal":
+            return FocalLoss(
+                alpha=self.config.model.focal_alpha,
+                gamma=self.config.model.focal_gamma
+            )
+        if loss_type == "weighted_bce" and self.class_weights is not None:
+            return nn.BCEWithLogitsLoss(pos_weight=self.class_weights)
+        return nn.BCEWithLogitsLoss()
 
     def calculate_loss(self, logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """손실 계산"""
-
-        if self.class_weights is not None:
-            loss_fct = nn.BCEWithLogitsLoss(pos_weight=self.class_weights)
-        else:
-            loss_fct = nn.BCEWithLogitsLoss()
-
-        return loss_fct(logits, labels)
+        return self.criterion(logits, labels)
 
     def train_epoch(self, model: nn.Module, train_loader: DataLoader,
                    optimizer: torch.optim.Optimizer, scheduler) -> float:
@@ -228,8 +239,11 @@ class KoreanUnsmileTrainer:
         model.train()
         total_loss = 0.0
         num_batches = len(train_loader)
+        grad_accum = self.config.training.gradient_accumulation_steps
 
         progress_bar = tqdm(train_loader, desc=f"Epoch {self.epoch + 1} Training")
+
+        optimizer.zero_grad()
 
         for batch_idx, batch in enumerate(progress_bar):
             # 배치를 디바이스로 이동
@@ -237,23 +251,19 @@ class KoreanUnsmileTrainer:
             attention_mask = batch['attention_mask'].to(self.device)
             labels = batch['labels'].to(self.device)
 
-            # 그래디언트 누적을 위한 처리
-            if (batch_idx + 1) % self.config.training.gradient_accumulation_steps == 0:
-                optimizer.zero_grad()
-
-            # 순전파
-            outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
-            loss = outputs['loss']
+            # 순전파 (loss는 trainer.criterion으로 별도 계산)
+            outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+            loss = self.calculate_loss(outputs['logits'], labels)
 
             # 그래디언트 누적을 위한 손실 정규화
-            loss = loss / self.config.training.gradient_accumulation_steps
+            loss = loss / grad_accum
             total_loss += loss.item()
 
-            # 역전파
+            # 역전파 (그라디언트 누적)
             loss.backward()
 
-            # 그래디언트 누적 단계마다 옵티마이저 스텝
-            if (batch_idx + 1) % self.config.training.gradient_accumulation_steps == 0:
+            # 누적 사이클 종료 시 step + zero_grad
+            if (batch_idx + 1) % grad_accum == 0:
                 # 그래디언트 클리핑
                 torch.nn.utils.clip_grad_norm_(model.parameters(), self.config.training.max_grad_norm)
 
@@ -261,6 +271,7 @@ class KoreanUnsmileTrainer:
                 optimizer.step()
                 if scheduler:
                     scheduler.step()
+                optimizer.zero_grad()
 
                 self.step += 1
 
@@ -308,10 +319,9 @@ class KoreanUnsmileTrainer:
                 attention_mask = batch['attention_mask'].to(self.device)
                 labels = batch['labels'].to(self.device)
 
-                outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
-
-                loss = outputs['loss']
+                outputs = model(input_ids=input_ids, attention_mask=attention_mask)
                 logits = outputs['logits']
+                loss = self.calculate_loss(logits, labels)
 
                 total_loss += loss.item()
 

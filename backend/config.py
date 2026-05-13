@@ -6,9 +6,23 @@ config.py
 import json
 import os
 
+from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime
+
+
+BASE_DIR = Path(__file__).resolve().parent
+
+
+def resolve_path(p: str) -> str:
+    """Resolve a path string against BASE_DIR if it is relative.
+
+    Lets the project run from any cwd. Configs saved with relative paths
+    still work; absolute paths pass through unchanged.
+    """
+    pp = Path(p)
+    return str(pp if pp.is_absolute() else BASE_DIR / pp)
 
 
 @dataclass
@@ -121,11 +135,16 @@ class ExperimentConfig:
     
     def __post_init__(self):
         """초기화 후 처리"""
-        # 출력 디렉토리에 타임스탬프 추가
+        # 상대 경로로 들어온 경우 BASE_DIR 기준 절대 경로로 해결
+        self.data.data_dir = resolve_path(self.data.data_dir)
         if not self.logging.run_name:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             self.logging.run_name = f"{self.experiment_name}_{timestamp}"
-            self.logging.output_dir = os.path.join(self.logging.output_dir, self.logging.run_name)
+            self.logging.output_dir = os.path.join(
+                resolve_path(self.logging.output_dir), self.logging.run_name
+            )
+        else:
+            self.logging.output_dir = resolve_path(self.logging.output_dir)
     
     def save(self, path: str) -> None:
         """설정을 JSON 파일로 저장"""
@@ -288,43 +307,33 @@ def create_config_from_args(args) -> ExperimentConfig:
     preset = getattr(args, 'preset', 'default')
     config = config_manager.create_config(preset)
     
-    # 명령행 인자로 오버라이드
+    # 명령행 인자로 오버라이드 (argparse default 때문에 hasattr는 항상 True →
+    # 사용자가 실제로 지정한 값만 반영하려면 None / False sentinel 체크 필요)
     overrides = {}
-    
-    # 모델 관련
-    if hasattr(args, 'model_name'):
-        overrides['model.model_name'] = args.model_name
-    if hasattr(args, 'max_length'):
-        overrides['model.max_length'] = args.max_length
-    if hasattr(args, 'dropout_rate'):
-        overrides['model.dropout_rate'] = args.dropout_rate
-    
-    # 훈련 관련
-    if hasattr(args, 'batch_size'):
-        overrides['training.batch_size'] = args.batch_size
-    if hasattr(args, 'learning_rate'):
-        overrides['training.learning_rate'] = args.learning_rate
-    if hasattr(args, 'num_epochs'):
-        overrides['training.num_epochs'] = args.num_epochs
-    if hasattr(args, 'weight_decay'):
-        overrides['training.weight_decay'] = args.weight_decay
-    
-    # 데이터 관련
-    if hasattr(args, 'data_dir'):
-        overrides['data.data_dir'] = args.data_dir
-    if hasattr(args, 'max_samples'):
-        overrides['data.max_samples'] = args.max_samples
-    
-    # 로깅 관련
-    if hasattr(args, 'output_dir'):
-        overrides['logging.output_dir'] = args.output_dir
-    if hasattr(args, 'use_wandb'):
-        overrides['logging.use_wandb'] = args.use_wandb
-    
-    # 기타
-    if hasattr(args, 'seed'):
-        overrides['seed'] = args.seed
-    
+
+    arg_to_path = {
+        'model_name': 'model.model_name',
+        'max_length': 'model.max_length',
+        'dropout_rate': 'model.dropout_rate',
+        'batch_size': 'training.batch_size',
+        'learning_rate': 'training.learning_rate',
+        'num_epochs': 'training.num_epochs',
+        'weight_decay': 'training.weight_decay',
+        'gradient_accumulation_steps': 'training.gradient_accumulation_steps',
+        'data_dir': 'data.data_dir',
+        'max_samples': 'data.max_samples',
+        'output_dir': 'logging.output_dir',
+        'seed': 'seed',
+    }
+    for arg_name, cfg_path in arg_to_path.items():
+        value = getattr(args, arg_name, None)
+        if value is not None:
+            overrides[cfg_path] = value
+
+    # use_wandb는 store_true 플래그 → True일 때만 반영
+    if getattr(args, 'use_wandb', False):
+        overrides['logging.use_wandb'] = True
+
     config.update(**overrides)
     
     return config

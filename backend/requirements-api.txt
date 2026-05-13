@@ -1,0 +1,11 @@
+# FastAPI 추론 서비스 전용 의존성
+# 학습/평가 의존성은 requirements.txt 참고
+
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+
+# 학습 코드와 공유하는 핵심 의존성
+torch>=1.9.0
+transformers>=4.15.0
+numpy>=1.21.0

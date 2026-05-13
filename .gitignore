@@ -1,3 +1,14 @@
+# Project-specific
+# 학습 산출물 (모델 체크포인트 포함, 수 GB 단위) — 추적 금지
+backend/output/
+output/
+# Frontend 빌드 산출물 및 의존성
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+frontend/*.local
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

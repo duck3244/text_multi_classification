@@ -15,9 +15,35 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any
 from sklearn.metrics import (
-    accuracy_score, precision_recall_fscore_support, 
+    accuracy_score, precision_recall_fscore_support,
     hamming_loss, multilabel_confusion_matrix, roc_auc_score
 )
+
+
+# 시각화 전용 한글→영문 라벨 매핑 (CSV/JSON 데이터는 한글 그대로 유지)
+LABEL_EN_MAP = {
+    '여성/가족': 'Women/Family',
+    '남성': 'Men',
+    '성소수자': 'LGBTQ',
+    '인종/국적': 'Race/Nationality',
+    '연령': 'Age',
+    '지역': 'Region',
+    '종교': 'Religion',
+    '기타 혐오': 'Other Hate',
+    '기타혐오': 'Other Hate',
+    '악플/욕설': 'Profanity',
+    'clean': 'Clean',
+}
+
+
+def to_en_label(label: str) -> str:
+    """단일 라벨을 영문으로 변환 (매핑 없으면 원본 유지)"""
+    return LABEL_EN_MAP.get(label, label)
+
+
+def to_en_labels(labels):
+    """라벨 리스트를 영문으로 변환"""
+    return [to_en_label(l) for l in labels]
 
 
 def set_seed(seed: int = 42) -> None:
@@ -225,57 +251,6 @@ class MetricsCalculator:
 
         return metrics
 
-    def _calculate_per_label_metrics(self, y_true: np.ndarray, y_pred: np.ndarray,
-                                   y_scores: Optional[np.ndarray] = None) -> Dict[str, Dict[str, float]]:
-        """레이블별 메트릭 계산"""
-
-        precision, recall, f1, support = precision_recall_fscore_support(
-            y_true, y_pred, average=None, zero_division=0
-        )
-
-        per_label_metrics = {}
-
-        for i, label_name in enumerate(self.label_names):
-            metrics = {
-                'precision': float(precision[i]),
-                'recall': float(recall[i]),
-                'f1': float(f1[i]),
-                'support': int(support[i]),
-                'accuracy': float((y_pred[:, i] == y_true[:, i]).mean()),
-                'positive_count': int(y_true[:, i].sum()),
-                'predicted_count': int(y_pred[:, i].sum()),
-                'true_positive': int(((y_pred[:, i] == 1) & (y_true[:, i] == 1)).sum()),
-                'false_positive': int(((y_pred[:, i] == 1) & (y_true[:, i] == 0)).sum()),
-                'false_negative': int(((y_pred[:, i] == 0) & (y_true[:, i] == 1)).sum()),
-                'true_negative': int(((y_pred[:, i] == 0) & (y_true[:, i] == 0)).sum())
-            }
-
-            # Specificity (True Negative Rate) 계산
-            tn = metrics['true_negative']
-            fp = metrics['false_positive']
-            if (tn + fp) > 0:
-                metrics['specificity'] = float(tn / (tn + fp))
-            else:
-                metrics['specificity'] = 0.0
-
-            # AUC 추가 (가능한 경우)
-            if y_scores is not None and len(np.unique(y_true[:, i])) > 1:
-                try:
-                    auc = roc_auc_score(y_true[:, i], y_scores[:, i])
-                    metrics['auc'] = float(auc)
-                except:
-                    metrics['auc'] = 0.5
-            else:
-                metrics['auc'] = None
-
-            per_label_metrics[label_name] = metrics
-
-        return per_label_metrics
-
-    def _calculate_confusion_matrices(self, y_true: np.ndarray, y_pred: np.ndarray) -> List[np.ndarray]:
-        """혼동 행렬 계산"""
-        return multilabel_confusion_matrix(y_true, y_pred).tolist()
-
 
 class EarlyStopping:
     """조기 종료 클래스"""
@@ -448,7 +423,7 @@ class VisualizationUtils:
                               figsize: Tuple[int, int] = (12, 8)):
         """레이블 분포 시각화"""
 
-        labels = list(label_counts.keys())
+        labels = to_en_labels(label_counts.keys())
         counts = list(label_counts.values())
 
         plt.figure(figsize=figsize)
@@ -474,6 +449,7 @@ class VisualizationUtils:
                               save_path: str = None, figsize: Tuple[int, int] = (20, 16)):
         """혼동 행렬들 시각화"""
 
+        label_names = to_en_labels(label_names)
         n_labels = len(label_names)
         n_cols = 4
         n_rows = (n_labels + n_cols - 1) // n_cols
@@ -507,14 +483,15 @@ class VisualizationUtils:
                              save_path: str = None, figsize: Tuple[int, int] = (15, 10)):
         """레이블별 메트릭 시각화"""
 
-        labels = list(per_label_metrics.keys())
+        kor_labels = list(per_label_metrics.keys())
+        labels = to_en_labels(kor_labels)
         metrics = ['precision', 'recall', 'f1']
 
         fig, axes = plt.subplots(1, 3, figsize=figsize)
         fig.suptitle('Per-Label Metrics', fontsize=16)
 
         for i, metric in enumerate(metrics):
-            values = [per_label_metrics[label][metric] for label in labels]
+            values = [per_label_metrics[label][metric] for label in kor_labels]
 
             bars = axes[i].bar(range(len(labels)), values)
             axes[i].set_title(f'{metric.capitalize()}')
@@ -671,103 +648,3 @@ if __name__ == "__main__":
         shutil.rmtree("test_output")
     if os.path.exists("test.log"):
         os.remove("test.log")
-
-    def _calculate_overall_metrics(self, y_true: np.ndarray, y_pred: np.ndarray,
-                                  y_scores: Optional[np.ndarray] = None) -> Dict[str, float]:
-        """전체 메트릭 계산"""
-
-        metrics = {}
-
-        # Exact Match Accuracy (모든 레이블이 정확히 일치)
-        metrics['exact_match_accuracy'] = np.all(y_pred == y_true, axis=1).mean()
-
-        # Hamming Loss (레이블별 불일치 평균)
-        metrics['hamming_loss'] = hamming_loss(y_true, y_pred)
-
-        # Subset Accuracy (정확히 일치하는 비율)
-        metrics['subset_accuracy'] = accuracy_score(y_true, y_pred)
-
-        # Macro/Micro 평균
-        precision, recall, f1, _ = precision_recall_fscore_support(
-            y_true, y_pred, average=None, zero_division=0
-        )
-
-        metrics['macro_precision'] = precision.mean()
-        metrics['macro_recall'] = recall.mean()
-        metrics['macro_f1'] = f1.mean()
-
-        # Micro 평균
-        micro_precision, micro_recall, micro_f1, _ = precision_recall_fscore_support(
-            y_true, y_pred, average='micro', zero_division=0
-        )
-
-        metrics['micro_precision'] = micro_precision
-        metrics['micro_recall'] = micro_recall
-        metrics['micro_f1'] = micro_f1
-
-        # AUC 계산 (가능한 경우)
-        if y_scores is not None:
-            try:
-                auc_scores = []
-                for i in range(y_true.shape[1]):
-                    if len(np.unique(y_true[:, i])) > 1:
-                        auc = roc_auc_score(y_true[:, i], y_scores[:, i])
-                        auc_scores.append(auc)
-                    else:
-                        auc_scores.append(0.5)
-
-                metrics['macro_auc'] = np.mean(auc_scores)
-                metrics['auc_scores'] = auc_scores
-
-            except Exception as e:
-                print(f"AUC 계산 오류: {e}")
-                metrics['macro_auc'] = None
-
-        return metrics
-
-    def _calculate_per_label_metrics(self, y_true: np.ndarray, y_pred: np.ndarray,
-                                   y_scores: Optional[np.ndarray] = None) -> Dict[str, Dict[str, float]]:
-        """레이블별 메트릭 계산"""
-
-        precision, recall, f1, support = precision_recall_fscore_support(
-            y_true, y_pred, average=None, zero_division=0
-        )
-
-        per_label_metrics = {}
-
-        for i, label_name in enumerate(self.label_names):
-            metrics = {
-                'precision': float(precision[i]),
-                'recall': float(recall[i]),
-                'f1': float(f1[i]),
-                'support': int(support[i]),
-                'accuracy': float((y_pred[:, i] == y_true[:, i]).mean()),
-                'positive_count': int(y_true[:, i].sum()),
-                'predicted_count': int(y_pred[:, i].sum()),
-                'true_positive': int(((y_pred[:, i] == 1) & (y_true[:, i] == 1)).sum()),
-                'false_positive': int(((y_pred[:, i] == 1) & (y_true[:, i] == 0)).sum()),
-                'false_negative': int(((y_pred[:, i] == 0) & (y_true[:, i] == 1)).sum()),
-                'true_negative': int(((y_pred[:, i] == 0) & (y_true[:, i] == 0)).sum())
-            }
-
-            # Specificity (True Negative Rate) 계산
-            tn = metrics['true_negative']
-            fp = metrics['false_positive']
-            if (tn + fp) > 0:
-                metrics['specificity'] = float(tn / (tn + fp))
-            else:
-                metrics['specificity'] = 0.0
-
-            # AUC 추가 (가능한 경우)
-            if y_scores is not None and len(np.unique(y_true[:, i])) > 1:
-                try:
-                    auc = roc_auc_score(y_true[:, i], y_scores[:, i])
-                    metrics['auc'] = float(auc)
-                except:
-                    metrics['auc'] = 0.5
-            else:
-                metrics['auc'] = None
-
-            per_label_metrics[label_name] = metrics
-
-        return per_label_metrics
